@@ -14,3 +14,8 @@ openpyxl>=3.1           # Excel generation
 # Hebrew RTL PDF support
 arabic-reshaper>=3.0    # Unicode BiDi reshaping for RTL text in reportlab
 python-bidi>=0.4.2      # BiDi algorithm for correct Hebrew rendering
+
+# Desktop packaging (EXE launcher)
+pystray>=0.19           # System tray icon (Windows/macOS/Linux)
+Pillow>=10.0            # Required by pystray for tray icon image
+pyinstaller>=6.0        # Build standalone EXE (dev dependency)

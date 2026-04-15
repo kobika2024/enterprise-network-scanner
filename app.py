@@ -3,6 +3,9 @@ Network Scanner - Flask Backend
 Supports: active TCP scan + Enterprise Asset Discovery + Shodan/Censys OSINT lookup
 """
 
+import os
+import sys
+
 from flask import Flask, request, jsonify, render_template, send_file
 from scanner import scan_network, PORT_PRESETS, SERVICES
 import threading
@@ -23,7 +26,11 @@ except ImportError as _imp_err:
     ENTERPRISE_AVAILABLE = False
     _enterprise_error = str(_imp_err)
 
-app = Flask(__name__)
+# Support PyInstaller bundle: allow launcher.py to override template/static folders
+_template_folder = os.environ.get('FLASK_TEMPLATE_FOLDER', 'templates')
+_static_folder   = os.environ.get('FLASK_STATIC_FOLDER',   'static')
+
+app = Flask(__name__, template_folder=_template_folder, static_folder=_static_folder)
 app.config['JSON_SORT_KEYS'] = False
 
 # ─── In-memory scan store ─────────────────────────────────────────────────────
