@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# Flask / runtime
+instance/
+*.db
+*.sqlite
+
+# Reports output (generated at runtime)
+*.pdf
+*.xlsx
+*.csv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Fonts (large binary — download separately)
+static/fonts/*.ttf
+static/fonts/*.otf
+
+# Secrets / API keys
+.env
+secrets.py
+
+# Logs
+*.log
+ssl_monitor_logs/
+
+# pysnmp cache
+.pysnmp/

@@ -1,0 +1,16 @@
+# Core
+flask>=3.0
+requests>=2.31
+
+# Enterprise Asset Discovery
+pysnmp-lextudio>=6.1    # SNMP v1/v2c/v3 (pure Python) — if pysnmp fails, use this
+docker>=7.0             # Docker SDK for Python
+ldap3>=2.9              # Active Directory / LDAP (optional)
+
+# Reports
+reportlab>=4.2          # PDF generation
+openpyxl>=3.1           # Excel generation
+
+# Hebrew RTL PDF support
+arabic-reshaper>=3.0    # Unicode BiDi reshaping for RTL text in reportlab
+python-bidi>=0.4.2      # BiDi algorithm for correct Hebrew rendering
