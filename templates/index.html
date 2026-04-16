@@ -1417,35 +1417,48 @@ function exportAssetJSON() {
 }
 
 function exportAssetExcel() {
+  if (!allAssets.length) { alert('אין נכסים לייצוא — הרץ סריקה תחילה'); return; }
   fetch('/api/report/excel', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({scan_id: assetScanId}),
+    // Send both scan_id (server cache) AND assets (client fallback)
+    body: JSON.stringify({scan_id: assetScanId, assets: allAssets}),
   })
-  .then(r => r.blob())
+  .then(r => {
+    if (!r.ok) return r.json().then(e => { throw new Error(e.error || r.statusText); });
+    return r.blob();
+  })
   .then(blob => {
     const a = Object.assign(document.createElement('a'), {
       href: URL.createObjectURL(blob),
-      download: 'assets.xlsx',
+      download: `assets_${new Date().toISOString().slice(0,10)}.xlsx`,
     });
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   })
   .catch(e => alert('שגיאה ביצירת Excel: ' + e));
 }
 
 function exportAssetPDF() {
+  if (!allAssets.length) { alert('אין נכסים לייצוא — הרץ סריקה תחילה'); return; }
   fetch('/api/report/pdf', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({scan_id: assetScanId}),
+    body: JSON.stringify({scan_id: assetScanId, assets: allAssets}),
   })
-  .then(r => r.blob())
+  .then(r => {
+    if (!r.ok) return r.json().then(e => { throw new Error(e.error || r.statusText); });
+    return r.blob();
+  })
   .then(blob => {
     const a = Object.assign(document.createElement('a'), {
       href: URL.createObjectURL(blob),
-      download: 'assets.pdf',
+      download: `assets_${new Date().toISOString().slice(0,10)}.pdf`,
     });
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   })
   .catch(e => alert('שגיאה ביצירת PDF: ' + e));
 }

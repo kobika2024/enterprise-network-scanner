@@ -376,22 +376,33 @@ def generate_excel(assets: list, meta: dict = None) -> bytes:
     Generate a full Excel report from asset list.
 
     Args:
-        assets: List of Asset.to_dict() results
+        assets: List of Asset.to_dict() results (dicts with .get() interface)
         meta:   Optional dict with {target, scan_date, duration}
 
     Returns:
         Raw .xlsx bytes
+
+    Raises:
+        RuntimeError if openpyxl is not installed or assets is None/empty
     """
     if not OPENPYXL_AVAILABLE:
         raise RuntimeError('openpyxl is not installed. Run: pip install openpyxl')
+
+    if not assets:
+        raise ValueError(
+            'רשימת הנכסים ריקה — הרץ סריקה לפני ייצוא הדוח. '
+            '(asset list is empty; run a scan before exporting)'
+        )
 
     if meta is None:
         meta = {}
 
     wb = openpyxl.Workbook()
-    # Remove default sheet
-    if 'Sheet' in wb.sheetnames:
-        del wb['Sheet']
+
+    # Remove the default blank sheet (name varies across openpyxl versions)
+    default_sheet = wb.active
+    if default_sheet is not None:
+        wb.remove(default_sheet)
 
     _sheet_assets(wb, assets)
     _sheet_ports(wb, assets)

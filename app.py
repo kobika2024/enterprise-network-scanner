@@ -16,6 +16,7 @@ from io import BytesIO
 from datetime import datetime
 
 # Enterprise discovery modules
+_enterprise_error = ''
 try:
     from discovery.orchestrator import run_discovery
     from discovery.ldap_discovery import query_ad
@@ -351,24 +352,45 @@ def cancel_asset_scan(scan_id):
     return jsonify({'ok': True})
 
 
+def _resolve_assets_and_meta(data: dict):
+    """
+    Helper shared by /api/report/excel and /api/report/pdf.
+
+    Priority:
+      1. If scan_id points to a live in-memory scan → use server-side assets + full meta.
+      2. Else use assets sent directly in the request body (client-side fallback).
+    Returns (assets: list[dict], meta: dict).
+    """
+    scan_id = data.get('scan_id') or ''
+
+    if scan_id and scan_id in asset_scans:
+        scan  = asset_scans[scan_id]
+        assets = scan.get('assets') or []
+        meta   = {
+            'target':    scan.get('target', ''),
+            'scan_date': (scan.get('start_time') or '')[:19],
+            'duration':  scan.get('duration', ''),
+        }
+        # If server-side list is somehow empty, fall back to client copy
+        if not assets:
+            assets = data.get('assets') or []
+    else:
+        assets = data.get('assets') or []
+        meta   = {}
+
+    return assets, meta
+
+
 @app.route('/api/report/excel', methods=['POST'])
 def report_excel():
     if not ENTERPRISE_AVAILABLE:
-        return jsonify({'error': 'Enterprise modules not loaded'}), 500
+        return jsonify({'error': f'Enterprise modules not loaded: {_enterprise_error}'}), 500
 
-    data    = request.get_json(force=True)
-    scan_id = data.get('scan_id', '')
+    data = request.get_json(force=True) or {}
+    assets, meta = _resolve_assets_and_meta(data)
 
-    if scan_id in asset_scans:
-        assets = asset_scans[scan_id]['assets']
-        meta   = {
-            'target':    asset_scans[scan_id].get('target'),
-            'scan_date': asset_scans[scan_id].get('start_time', '')[:19],
-            'duration':  asset_scans[scan_id].get('duration', ''),
-        }
-    else:
-        assets = data.get('assets', [])
-        meta   = {}
+    if not assets:
+        return jsonify({'error': 'רשימת הנכסים ריקה — הרץ סריקה לפני ייצוא הדוח'}), 400
 
     try:
         xlsx_bytes = generate_excel(assets, meta)
@@ -386,21 +408,13 @@ def report_excel():
 @app.route('/api/report/pdf', methods=['POST'])
 def report_pdf():
     if not ENTERPRISE_AVAILABLE:
-        return jsonify({'error': 'Enterprise modules not loaded'}), 500
+        return jsonify({'error': f'Enterprise modules not loaded: {_enterprise_error}'}), 500
 
-    data    = request.get_json(force=True)
-    scan_id = data.get('scan_id', '')
+    data = request.get_json(force=True) or {}
+    assets, meta = _resolve_assets_and_meta(data)
 
-    if scan_id in asset_scans:
-        assets = asset_scans[scan_id]['assets']
-        meta   = {
-            'target':    asset_scans[scan_id].get('target'),
-            'scan_date': asset_scans[scan_id].get('start_time', '')[:19],
-            'duration':  asset_scans[scan_id].get('duration', ''),
-        }
-    else:
-        assets = data.get('assets', [])
-        meta   = {}
+    if not assets:
+        return jsonify({'error': 'רשימת הנכסים ריקה — הרץ סריקה לפני ייצוא הדוח'}), 400
 
     try:
         pdf_bytes = generate_pdf(assets, meta)
