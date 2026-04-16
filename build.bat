@@ -1,81 +1,104 @@
 @echo off
-:: build.bat — Build NetworkScanner.exe (PyInstaller onedir, no console, UAC admin)
-:: Run this from the network-scanner\ directory as Administrator for best results.
+:: build.bat — Build NetworkScanner.exe  (PyInstaller onedir, no console, UAC admin)
+:: Run this from the network-scanner\ directory.
+:: Tip: run as Administrator so PyInstaller can read all system DLLs correctly.
 
 setlocal EnableDelayedExpansion
 
 echo.
-echo  ======================================================
-echo   Network Scanner — Windows EXE Builder
-echo  ======================================================
+echo  ============================================================
+echo   Network Scanner ^| Windows EXE Builder
+echo  ============================================================
 echo.
 
-:: ── Check Python ────────────────────────────────────────────────────────────
+:: ── 1. Verify Python ─────────────────────────────────────────────────────────
 where python >nul 2>&1
 if errorlevel 1 (
-    echo  [ERROR] Python not found in PATH. Install Python 3.11+ and try again.
+    echo  [ERROR] Python not found in PATH.
+    echo         Install Python 3.11+ from https://python.org and try again.
     pause & exit /b 1
 )
-for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo  Python: %%v
+for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo  Python : %%v
+echo.
 
-:: ── Check / install PyInstaller ─────────────────────────────────────────────
+:: ── 2. Install / upgrade build-time tools ─────────────────────────────────────
+echo  [1/5] Checking build tools...
+
 python -c "import PyInstaller" >nul 2>&1
 if errorlevel 1 (
-    echo.
-    echo  [INFO] Installing PyInstaller...
-    python -m pip install pyinstaller --quiet
+    echo        Installing PyInstaller...
+    python -m pip install "pyinstaller>=6.0" --quiet
 )
 
-:: ── Check / install pystray + Pillow (tray icon) ────────────────────────────
 python -c "import pystray" >nul 2>&1
 if errorlevel 1 (
-    echo  [INFO] Installing pystray...
-    python -m pip install pystray --quiet
+    echo        Installing pystray...
+    python -m pip install "pystray>=0.19" --quiet
 )
+
 python -c "from PIL import Image" >nul 2>&1
 if errorlevel 1 (
-    echo  [INFO] Installing Pillow...
-    python -m pip install Pillow --quiet
+    echo        Installing Pillow...
+    python -m pip install "Pillow>=10.0" --quiet
 )
 
-:: ── Install all project dependencies ────────────────────────────────────────
+:: ── 3. Install project runtime dependencies ────────────────────────────────────
 echo.
-echo  [INFO] Installing project requirements...
+echo  [2/5] Installing project requirements...
 python -m pip install -r requirements.txt --quiet
+if errorlevel 1 (
+    echo  [ERROR] Failed to install requirements.
+    pause & exit /b 1
+)
 
-:: ── Clean previous build ─────────────────────────────────────────────────────
+:: ── 4. Generate application icon ──────────────────────────────────────────────
 echo.
-echo  [INFO] Cleaning previous build artifacts...
-if exist dist\NetworkScanner rmdir /s /q dist\NetworkScanner
+echo  [3/5] Generating application icon...
+python make_icon.py static\icon.ico
+if errorlevel 1 (
+    echo  [WARN] Icon generation failed — EXE will use the default PyInstaller icon.
+)
+
+:: ── 5. Clean previous build artifacts ─────────────────────────────────────────
+echo.
+echo  [4/5] Cleaning previous build...
+if exist dist\NetworkScanner  rmdir /s /q dist\NetworkScanner
 if exist build\NetworkScanner rmdir /s /q build\NetworkScanner
 
-:: ── Run PyInstaller ──────────────────────────────────────────────────────────
+:: ── 6. Run PyInstaller ────────────────────────────────────────────────────────
 echo.
-echo  [INFO] Building EXE (this may take 2-5 minutes)...
+echo  [5/5] Building EXE with PyInstaller (may take 2-5 minutes)...
 echo.
 python -m PyInstaller network_scanner.spec --clean --noconfirm
 
 if errorlevel 1 (
     echo.
-    echo  [ERROR] Build failed. Check output above for details.
+    echo  [ERROR] Build failed. Review the output above for details.
+    echo.
     pause & exit /b 1
 )
 
-:: ── Report success ───────────────────────────────────────────────────────────
+:: ── Verify output ─────────────────────────────────────────────────────────────
+if not exist "dist\NetworkScanner\NetworkScanner.exe" (
+    echo  [ERROR] EXE not found after build — something went wrong.
+    pause & exit /b 1
+)
+
 echo.
-echo  ======================================================
-echo   Build complete!
-echo   Output: dist\NetworkScanner\NetworkScanner.exe
-echo  ======================================================
+echo  ============================================================
+echo   Build successful!
 echo.
-echo  To run: double-click dist\NetworkScanner\NetworkScanner.exe
-echo  (Windows will prompt for administrator elevation)
+echo   Output : dist\NetworkScanner\NetworkScanner.exe
+echo.
+echo   To distribute: zip or copy the entire dist\NetworkScanner\
+echo   folder — the EXE needs all DLLs in the same directory.
+echo.
+echo   First run will trigger a Windows UAC elevation prompt.
+echo  ============================================================
 echo.
 
-:: Open the output folder in Explorer
-if exist dist\NetworkScanner (
-    explorer dist\NetworkScanner
-)
+:: Open the output folder in Explorer so the user can find the EXE
+explorer dist\NetworkScanner
 
 pause
 endlocal
