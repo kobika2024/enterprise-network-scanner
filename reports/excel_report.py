@@ -76,7 +76,7 @@ def _style_header_row(ws, row: int, num_cols: int):
         cell.fill = _make_header_fill()
         cell.font = _make_font(bold=True, color='FFFFFF', size=11)
         cell.alignment = Alignment(horizontal='center', vertical='center',
-                                   wrap_text=True, reading_order=2)
+                                   wrap_text=True, readingOrder=2)
         cell.border = _make_border()
 
 
@@ -87,7 +87,7 @@ def _style_data_row(ws, row: int, num_cols: int, fill=None):
             cell.fill = fill
         cell.font = _make_font(size=10)
         cell.alignment = Alignment(horizontal='right', vertical='center',
-                                   reading_order=2)
+                                   readingOrder=2)
         cell.border = _make_border()
 
 
