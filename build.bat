@@ -1,9 +1,11 @@
 @echo off
 :: build.bat — Build NetworkScanner.exe  (PyInstaller onedir, no console, UAC admin)
-:: Run this from the network-scanner\ directory.
-:: Tip: run as Administrator so PyInstaller can read all system DLLs correctly.
+:: Can be launched from any directory — it automatically switches to its own folder.
 
 setlocal EnableDelayedExpansion
+
+:: ── Always run from the directory that contains this script ──────────────────
+cd /d "%~dp0"
 
 echo.
 echo  ============================================================
