@@ -150,7 +150,9 @@ a = Analysis(
         'wx', 'gi', 'gtk',
         'IPython', 'notebook', 'jupyter',
         'test', 'unittest',
-        'distutils',
+        # NOTE: do NOT exclude 'distutils' — PyInstaller 6.x + Python 3.12/3.13
+        # register a setuptools alias for it via hook-distutils.py, and excluding
+        # it first causes: ValueError: "distutils" already imported as ExcludedModule
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,

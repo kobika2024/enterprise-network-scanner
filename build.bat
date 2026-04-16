@@ -24,6 +24,11 @@ echo.
 :: ── 2. Install / upgrade build-time tools ─────────────────────────────────────
 echo  [1/5] Checking build tools...
 
+:: setuptools must be up-to-date FIRST — Python 3.12/3.13 removed distutils from
+:: stdlib; PyInstaller hooks rely on setuptools to provide it.  An old setuptools
+:: causes "ValueError: distutils already imported as ExcludedModule" at analysis time.
+python -m pip install "setuptools>=70.0" --upgrade --quiet
+
 python -c "import PyInstaller" >nul 2>&1
 if errorlevel 1 (
     echo        Installing PyInstaller...
